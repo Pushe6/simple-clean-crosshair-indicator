@@ -12,22 +12,23 @@ function drawInd() {
     //do nothing
   }
   else if (UI.GetValue(dropdown) == 1) { //Outline selected
-    IndicatorsAndRenderTextGlow("outline");
+    IndicatorRender("outline");
   }
   else if (UI.GetValue(dropdown) == 2) { //TextGlow selected
-    IndicatorsAndRenderTextGlow("textglow");
+    IndicatorRender("textglow");
   }
   else if (UI.GetValue(dropdown) == 3) { //Scrolling selected
-    IndicatorsAndRenderTextGlow("Scrolling");
+    IndicatorRender("Scrolling");
   }
   else if (UI.GetValue(dropdown) == 4) { //Scrolling Glow selected
-    IndicatorsAndRenderTextGlow("ScrollingGlow")
+    IndicatorRender("ScrollingGlow")
   }
   if (UI.GetValue(mindmgIndicator)) { //MinDmg Toggle
-    onDraw();
+    MinDmgRender();
   }
 }
 
+//This is only used for the Live Build, since its already a thing in Alpha
 function FreestandOnKey() {
   var getHotkey = UI.GetValue(["Rage", "Anti Aim", "General", "Key assignment", "Freestanding"]);
   if (getHotkey) {
@@ -38,6 +39,7 @@ function FreestandOnKey() {
 }
 
 //Outline Text Function
+//5 String method doesn't work on Smallest Pixel 7
 function outline_string(x, y, alignid, text, color, font) {
   Render.String(x - 1, y, alignid, text, [0, 0, 0, color[3]], font);
   Render.String(x + 1, y, alignid, text, [0, 0, 0, color[3]], font);
@@ -69,7 +71,7 @@ function addTextGlow(x, y, align, text, color, font, glowColor, glowSize) {
 }
 
 
-function IndicatorsAndRenderTextGlow(indicatorType) {
+function IndicatorRender(indicatorType) {
   //Checks
   if (Entity.GetLocalPlayer() == null || !Entity.IsAlive(Entity.GetLocalPlayer())) return
   if (!UI.GetValue(dropdown)) return
@@ -101,8 +103,17 @@ function IndicatorsAndRenderTextGlow(indicatorType) {
   const pink = [255, 0, 255, 255]
   const orange = [255, 110, 0, 255]
   const transparent = [255, 255, 255, 125]
-  const glow = [255, 255, 255, 4]
+  const glow = [255, 255, 255, 5]
 
+  // Changing/Conditional Colors
+  const onShotColor = checkonshot ? (charge ? (checkonshot ? lightBlue : transparent) : (checkonshot ? charge_color : transparent)) : transparent;
+  const dtColor = checkdt ? (charge ? (checkdt ? dt_color : transparent) : (checkdt ? charge_color : transparent)) : transparent;
+  const onShotGlowColor = checkonshot ? charge ? [0, 180, 255, 5] : [255, 0, 0, 5] : glow;
+  const dtGlowColor = checkdt ? charge ? [0, 255, 0, 5] : [255, 0, 0, 5] : glow;
+  const freestandColor = freestand ? yellow : transparent;
+  const baimColor = baim ? pink : transparent;
+  const dmgColor = dmg ? orange : transparent;
+  
   //Stuff for Scrolling Text
   time += Globals.Frametime();
   if (lastTime + 0.02 < time) {
@@ -125,57 +136,46 @@ function IndicatorsAndRenderTextGlow(indicatorType) {
   if (indicatorType === "outline") {
     // Text Render
     outline_string(sx - 14, sy + 20, 0, "ONETAP", [r, g, b, 255], small);
-    outline_string(sx + 2, sy + 32, 0, "FS", freestand ? yellow : transparent, small);
-    outline_string(sx + 14, sy + 32, 0, "BA", baim ? pink : transparent, small);
-    outline_string(sx - 7, sy + 40, 0, "DMG", dmg ? orange : transparent, small);
+    outline_string(sx + 2, sy + 32, 0, "FS", freestandColor, small);
+    outline_string(sx + 14, sy + 32, 0, "BA", baimColor, small);
+    outline_string(sx - 7, sy + 40, 0, "DMG", dmgColor, small);
 
     // Onshot Render
-    const onShotColor = checkonshot ? (charge ? (checkonshot ? lightBlue : transparent) : (checkonshot ? charge_color : transparent)) : transparent;
     outline_string(sx - 10, sy + 32, 0, "OS", onShotColor, small);
 
     // Double Tap Render
-    const dtColor = checkdt ? (charge ? (checkdt ? dt_color : transparent) : (checkdt ? charge_color : transparent)) : transparent;
     outline_string(sx - 21, sy + 32, 0, "DT", dtColor, small);
 
   } else if (indicatorType === "textglow") {
     // Text Render
-    addTextGlow(sx - 14, sy + 20, 0, "ONETAP", [r, g, b, 255], small, [r, g, b, 4], UI.GetValue(size));
+    addTextGlow(sx - 14, sy + 20, 0, "ONETAP", [r, g, b, 255], small, [r, g, b, 5], UI.GetValue(size));
 
     // Onshot Render
-    const onShotColor = checkonshot ? (charge ? (checkonshot ? lightBlue : transparent) : (checkonshot ? charge_color : transparent)) : transparent;
-    const onShotGlowColor = checkonshot ? charge ? [0, 180, 255, 5] : [255, 0, 0, 5] : glow;
     addTextGlow(sx - 10, sy + 32, 0, "OS", onShotColor, small, onShotGlowColor, UI.GetValue(size));
 
-    // Double Tap Render
-    const dtColor = checkdt ? (charge ? (checkdt ? dt_color : transparent) : (checkdt ? charge_color : transparent)) : transparent;
-    const dtGlowColor = checkdt ? charge ? [0, 255, 0, 5] : [255, 0, 0, 5] : glow;
+    // Double Tap Render    
     addTextGlow(sx - 21, sy + 32, 0, "DT", dtColor, small, dtGlowColor, UI.GetValue(size));
 
     // Freestand Render
-    const freestandColor = freestand ? yellow : transparent;
     addTextGlow(sx + 2, sy + 32, 0, "FS", freestandColor, small, freestand ? [255, 255, 0, 5] : glow, UI.GetValue(size));
 
     // Body Aim Render
-    const baimColor = baim ? pink : transparent;
     addTextGlow(sx + 14, sy + 32, 0, "BA", baimColor, small, baim ? [255, 0, 255, 5] : glow, UI.GetValue(size));
 
     // Damage Override Render
-    const dmgColor = dmg ? orange : transparent;
     addTextGlow(sx - 7, sy + 40, 0, "DMG", dmgColor, small, dmg ? [255, 110, 0, 5] : glow, UI.GetValue(size));
 
   } else if (indicatorType === 'Scrolling') {
     // Text Render
     renderShimmerText(sx - 14, sy + 20, 0, "ONETAP", [r, g, b, 255], weights, small);
-    outline_string(sx + 2, sy + 32, 0, "FS", freestand ? yellow : transparent, small);
-    outline_string(sx + 14, sy + 32, 0, "BA", baim ? pink : transparent, small);
-    outline_string(sx - 7, sy + 40, 0, "DMG", dmg ? orange : transparent, small);
+    outline_string(sx + 2, sy + 32, 0, "FS", freestandColor, small);
+    outline_string(sx + 14, sy + 32, 0, "BA", baimColor, small);
+    outline_string(sx - 7, sy + 40, 0, "DMG", dmgColor, small);
 
     // Onshot Render
-    const onShotColor = checkonshot ? (charge ? (checkonshot ? lightBlue : transparent) : (checkonshot ? charge_color : transparent)) : transparent;
     outline_string(sx - 10, sy + 32, 0, "OS", onShotColor, small);
 
     // Double Tap Render
-    const dtColor = checkdt ? (charge ? (checkdt ? dt_color : transparent) : (checkdt ? charge_color : transparent)) : transparent;
     outline_string(sx - 21, sy + 32, 0, "DT", dtColor, small);
 
   } else if (indicatorType === 'ScrollingGlow') {
@@ -183,25 +183,18 @@ function IndicatorsAndRenderTextGlow(indicatorType) {
     renderShimmeringGlowText(sx - 14, sy + 20, 0, "ONETAP", [r, g, b, 255], weights, small, [r, g, b, 5], UI.GetValue(size));
 
     // Onshot Render
-    const onShotColor = checkonshot ? (charge ? (checkonshot ? lightBlue : transparent) : (checkonshot ? charge_color : transparent)) : transparent;
-    const onShotGlowColor = checkonshot ? charge ? [0, 180, 255, 5] : [255, 0, 0, 5] : glow;
     addTextGlow(sx - 10, sy + 32, 0, "OS", onShotColor, small, onShotGlowColor, UI.GetValue(size));
 
     // Double Tap Render
-    const dtColor = checkdt ? (charge ? (checkdt ? dt_color : transparent) : (checkdt ? charge_color : transparent)) : transparent;
-    const dtGlowColor = checkdt ? charge ? [0, 255, 0, 5] : [255, 0, 0, 5] : glow;
     addTextGlow(sx - 21, sy + 32, 0, "DT", dtColor, small, dtGlowColor, UI.GetValue(size));
 
     // Freestand Render
-    const freestandColor = freestand ? yellow : transparent;
     addTextGlow(sx + 2, sy + 32, 0, "FS", freestandColor, small, freestand ? [255, 255, 0, 5] : glow, UI.GetValue(size));
 
     // Body Aim Render
-    const baimColor = baim ? pink : transparent;
     addTextGlow(sx + 14, sy + 32, 0, "BA", baimColor, small, baim ? [255, 0, 255, 5] : glow, UI.GetValue(size));
 
     // Damage Override Render
-    const dmgColor = dmg ? orange : transparent;
     addTextGlow(sx - 7, sy + 40, 0, "DMG", dmgColor, small, dmg ? [255, 110, 0, 5] : glow, UI.GetValue(size));
   }
 }
@@ -404,8 +397,7 @@ function renderShimmeringGlowText(x, y, align, text, color, shimmerWeights, font
   }
 }
 
-//An Optimized version of Wrath's MinDmg Indicator
-//Clean Outline instead of using outline_string from above
+// -45deg Shadow instead of full outline
 function ss(x, y, string, color, font) {
   Render.String(x + 1, y + 1, 0, string.toString(), [0, 0, 0, 255], font);
   Render.String(x, y, 0, string.toString(), color, font);
@@ -450,7 +442,7 @@ var cleanWeaponNames = {
   "nova": "Nova",
 };
 
-function onDraw() {
+function MinDmgRender() {
   //Checks
   const localPlayer = Entity.GetLocalPlayer();
   if (!Entity.IsAlive(localPlayer)) return;

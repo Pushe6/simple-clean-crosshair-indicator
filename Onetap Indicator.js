@@ -266,7 +266,6 @@ function renderShimmerText(x, y, align, text, color, shimmerWeights, font) {
     const char = text[i];
 
     if (char == " ") {
-      Render.String(x, y, align, " ", color, font);
       x += Render.TextSize(char, font)[0];
       continue;
     }
